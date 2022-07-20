@@ -1,0 +1,9 @@
+#+title: Notes
+* Issues
+** Server
+- stream.read() blocks when there is no data to read. this becomes an issue when there are multiple clients connected. nobody can recieve any data until everybody sends something.
+- buffer size needs to be dynamically sized
+- program crashes when a client disconnects.
+
+** Client
+- buffer size needs to be dynamically sized
