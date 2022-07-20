@@ -54,7 +54,7 @@ fn main() -> std::io::Result<()> {
 
             stream.set_nonblocking(true);
             let mut client = ClientInfo::new(stream);
-            client.outbox.push(("Server".to_string(), "Connection established!".to_string()));
+            client.outbox.push(("Server".to_string(), "Connection established!\n".to_string()));
 
             clients.insert(client_sock, client);
             println!("new conection from {:?}", client_sock);
@@ -62,17 +62,20 @@ fn main() -> std::io::Result<()> {
 
         // get incoming messages
         for (ip, client) in clients.iter_mut() {
-            //let mut buf = Vec::new();
-            //buf.reserve(32);
-            let mut buf = [0 as u8; 50];
-            //client.stream.read(&mut buf)?;
-            if let Ok(bytes_read) = client.stream.read(&mut buf) {
+            let mut new_msg = Vec::new();
+
+            // fill new_msg with the recieved message
+            let mut buf = [0 as u8; 32];
+            while let Ok(bytes_read) = client.stream.read(&mut buf) {
+                new_msg.extend_from_slice(&buf[..bytes_read]);
+            }
+
+            if new_msg.len() > 0 {
                 //TODO do some processing on buf to figure out what the client actually wants.
                 // for now, just send out all its contents.
-
-                let buf = std::str::from_utf8(&buf).unwrap();
-                println!("recieved \"{}\" from {:?}", buf, ip);
-                messages.push((client.username.clone(), buf.to_string()));
+                let new_msg = String::from_utf8(new_msg).unwrap();
+                println!("recieved \"{}\" from {:?}", new_msg, ip);
+                messages.push((client.username.clone(), new_msg.to_string()));
             }
         }
 

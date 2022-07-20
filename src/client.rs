@@ -46,17 +46,19 @@ fn main() -> std::io::Result<()> {
         print!(">> ");
         stdout.flush()?;
         stdin.read_line(&mut message)?;
-        message.pop(); // get rid of annoying newline
+        //message.pop(); // get rid of annoying newline
 
         // get new messages from server
-        if message.eq("/refresh") {
-            //let mut buf = Vec::new();
-            let mut buf = [0 as u8; 50];
-            if let Ok(bytes_read) = stream.read(&mut buf) {
-                println!("{}", std::str::from_utf8(&buf).unwrap());
+        if message.eq("/refresh\n") {
+            let mut inbox = Vec::new();
+            let mut buf = [0 as u8; 32];
+            while let Ok(bytes_read) = stream.read(&mut buf) {
+                inbox.extend_from_slice(&buf[..bytes_read]);
             }
 
-        } else if message.eq("/quit") {
+            println!("{}", String::from_utf8(inbox).unwrap());
+
+        } else if message.eq("/quit\n") {
             break;
         // send message to server
         } else if message.len() > 0 {

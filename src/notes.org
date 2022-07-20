@@ -2,12 +2,15 @@
 * Issues
 ** DONE client and server each block when they read.
 :LOGBOOK:
-CLOCK: [2022-07-20 Wed 16:57]
+CLOCK: [2022-07-20 Wed 16:57]--[2022-07-20 Wed 16:59] =>  0:02
 CLOCK: [2022-07-20 Wed 16:00]--[2022-07-20 Wed 16:56] =>  0:56
 :END:
  stream.read() blocks when there is no data to read. this becomes an issue when there are multiple clients connected. nobody can recieve any data until everybody sends something.
 
 ** TODO buffers needs to be dynamically sized
+:LOGBOOK:
+CLOCK: [2022-07-20 Wed 16:59]--[2022-07-20 Wed 17:24] =>  0:25
+:END:
 ** TODO program creashes when a client disconnects
 
 * Resolved Issues
