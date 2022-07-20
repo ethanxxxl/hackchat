@@ -8,36 +8,38 @@ fn main() -> std::io::Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
     let mut server_addr = String::new();
-    loop {
-        server_addr.clear();
-        print!("enter the server address: ");
-        stdout.flush()?;
-        stdin.read_line(&mut server_addr)?;
-        server_addr.pop(); // newline character at end causes problems
+    //loop {
+    //    server_addr.clear();
+    //    print!("enter the server address: ");
+    //    stdout.flush()?;
+    //    stdin.read_line(&mut server_addr)?;
+    //    server_addr.pop(); // newline character at end causes problems
 
-        if let Err(_) = server_addr.to_socket_addrs() {
-            println!("you entered: {}, incorrect format", server_addr);
-            continue;
-        }
+    //    if let Err(_) = server_addr.to_socket_addrs() {
+    //        println!("you entered: {}, incorrect format", server_addr);
+    //        continue;
+    //    }
 
-        if server_addr.to_socket_addrs().unwrap().count() > 0 {
-            break;
-        } else {
-            println!("you entered: {}, incorrect format", server_addr);
-        }
+    //    if server_addr.to_socket_addrs().unwrap().count() > 0 {
+    //        break;
+    //    } else {
+    //        println!("you entered: {}, incorrect format", server_addr);
+    //    }
 
-    }
+    //}
 
-    let mut name = String::new();
-    print!("enter your name: ");
-    stdout.flush()?;
-    stdin.read_line(&mut name)?;
-    name.pop();
+    server_addr = "127.0.0.1:4000".to_string();
+
+    //let mut name = String::new();
+    //print!("enter your name: ");
+    //stdout.flush()?;
+    //stdin.read_line(&mut name)?;
+    //name.pop();
 
     //let (tx, rx) = mpsc::channel();
 
     let mut stream = TcpStream::connect(server_addr).expect("error connecting to server");
-    //stream.set_nonblocking(true)?;
+    stream.set_nonblocking(true)?;
 
     let mut message = String::new();
     loop {
@@ -50,8 +52,9 @@ fn main() -> std::io::Result<()> {
         if message.eq("/refresh") {
             //let mut buf = Vec::new();
             let mut buf = [0 as u8; 50];
-            stream.read(&mut buf).unwrap();
-            println!("{}", std::str::from_utf8(&buf).unwrap());
+            if let Ok(bytes_read) = stream.read(&mut buf) {
+                println!("{}", std::str::from_utf8(&buf).unwrap());
+            }
 
         } else if message.eq("/quit") {
             break;

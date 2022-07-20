@@ -1,9 +1,13 @@
 #+title: Notes
 * Issues
-** Server
-- stream.read() blocks when there is no data to read. this becomes an issue when there are multiple clients connected. nobody can recieve any data until everybody sends something.
-- buffer size needs to be dynamically sized
-- program crashes when a client disconnects.
+** DONE client and server each block when they read.
+:LOGBOOK:
+CLOCK: [2022-07-20 Wed 16:57]
+CLOCK: [2022-07-20 Wed 16:00]--[2022-07-20 Wed 16:56] =>  0:56
+:END:
+ stream.read() blocks when there is no data to read. this becomes an issue when there are multiple clients connected. nobody can recieve any data until everybody sends something.
 
-** Client
-- buffer size needs to be dynamically sized
+** TODO buffers needs to be dynamically sized
+** TODO program creashes when a client disconnects
+
+* Resolved Issues

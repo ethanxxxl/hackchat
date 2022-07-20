@@ -24,7 +24,7 @@ impl ClientInfo {
 
 
 fn main() -> std::io::Result<()> {
-    let socket = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 0);
+    let socket = SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 4000);
 
     let listener = TcpListener::bind(socket)?;
     let socket = listener.local_addr().unwrap();
@@ -66,11 +66,10 @@ fn main() -> std::io::Result<()> {
             //buf.reserve(32);
             let mut buf = [0 as u8; 50];
             //client.stream.read(&mut buf)?;
-            client.stream.read(&mut buf)?;
+            if let Ok(bytes_read) = client.stream.read(&mut buf) {
+                //TODO do some processing on buf to figure out what the client actually wants.
+                // for now, just send out all its contents.
 
-            //TODO do some processing on buf to figure out what the client actually wants.
-            // for now, just send out all its contents.
-            if buf.len() > 0 {
                 let buf = std::str::from_utf8(&buf).unwrap();
                 println!("recieved \"{}\" from {:?}", buf, ip);
                 messages.push((client.username.clone(), buf.to_string()));
