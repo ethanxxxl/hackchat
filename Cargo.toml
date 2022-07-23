@@ -5,6 +5,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies]
+
 [[bin]]
 name = "server"
 path = "src/server.rs"
@@ -13,4 +15,6 @@ path = "src/server.rs"
 name = "client"
 path = "src/client.rs"
 
-[dependencies]
+[lib]
+name = "packet"
+path = "src/packet.rs"

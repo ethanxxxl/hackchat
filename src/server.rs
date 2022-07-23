@@ -3,6 +3,9 @@ use std::collections::HashMap;
 use std::sync::mpsc;
 use std::thread;
 use std::io::{Read, Write};
+use std::any::TypeId;
+
+use packet::Packet;
 
 struct ClientInfo {
     username: String,
@@ -57,43 +60,46 @@ fn main() -> std::io::Result<()> {
             client.outbox.push(("Server".to_string(), "Connection established!\n".to_string()));
 
             clients.insert(client_sock, client);
-            println!("new conection from {:?}", client_sock);
+            println!("pending connection from {:?}", client_sock);
         }
 
-        // get incoming messages
-        for (ip, client) in clients.iter_mut() {
-            let mut new_msg = Vec::new();
+        // get incoming messages ie, read all streams
+        for (ip, mut client) in clients.iter_mut() {
+            while let Ok(pkt) = Packet::recv(&mut client.stream) {
+                match pkt {
+                    Packet::Connect(username) => {
+                        println!("{} connected", username);
+                        client.username = username;
+                    },
+                    Packet::Message(msg) => {
+                        println!("recieved \"{}\" from {:?}", msg, ip);
+                        messages.push((client.username.clone(), msg));
+                    },
+                    Packet::Channel(n) => {
 
-            // fill new_msg with the recieved message
-            let mut buf = [0 as u8; 32];
-            while let Ok(bytes_read) = client.stream.read(&mut buf) {
-                new_msg.extend_from_slice(&buf[..bytes_read]);
+                    },
+                    //Packet::ChatHistory(history) => {
+                    //},
+                    _ => {
+                        println!("something weird happened...");
+                    },
+                }
             }
 
-            if new_msg.len() > 0 {
-                //TODO do some processing on buf to figure out what the client actually wants.
-                // for now, just send out all its contents.
-                let new_msg = String::from_utf8(new_msg).unwrap();
-                println!("recieved \"{}\" from {:?}", new_msg, ip);
-                messages.push((client.username.clone(), new_msg.to_string()));
-            }
         }
 
         // send outbound messages
         for (ip, client) in clients.iter_mut() {
             for msg in client.outbox.iter() {
                 let msg = format!("{}: {}", msg.0, msg.1);
-                client.stream.write(msg.as_bytes())?;
-                client.stream.flush()?;
+                Packet::Message(msg.to_string()).send(&mut client.stream);
                 println!("sending \"{}\" to {:?}", msg, ip);
             }
             client.outbox.clear();
 
-
             for msg in messages.iter() {
                 let msg = format!("{}: {}", msg.0, msg.1);
-                client.stream.write(msg.as_bytes())?;
-                client.stream.flush()?;
+                Packet::Message(msg.to_string()).send(&mut client.stream);
                 println!("sending \"{}\" to {:?}", msg, ip);
             }
         }

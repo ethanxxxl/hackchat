@@ -1,0 +1,61 @@
+#+title: Notes
+* Issues
+** DONE client and server each block when they read.
+:LOGBOOK:
+CLOCK: [2022-07-20 Wed 16:57]--[2022-07-20 Wed 16:59] =>  0:02
+CLOCK: [2022-07-20 Wed 16:00]--[2022-07-20 Wed 16:56] =>  0:56
+:END:
+ stream.read() blocks when there is no data to read. this becomes an issue when there are multiple clients connected. nobody can recieve any data until everybody sends something.
+
+** DONE buffers needs to be dynamically sized
+:LOGBOOK:
+CLOCK: [2022-07-20 Wed 16:59]--[2022-07-20 Wed 17:24] =>  0:25
+:END:
+** TODO program creashes when a client disconnects
+
+* Features
+#+BEGIN: clocktable :scope subtree :maxlevel 2
+#+CAPTION: Clock summary at [2022-07-22 Fri 22:04]
+| Headline                        | Time   |      |
+|---------------------------------+--------+------|
+| *Total time*                    | *8:06* |      |
+|---------------------------------+--------+------|
+| Features                        | 8:06   |      |
+| \_  standardized packet formats |        | 8:06 |
+#+END:
+
+** DONE standardized packet formats
+:LOGBOOK:
+CLOCK: [2022-07-22 Fri 19:54]--[2022-07-22 Fri 22:03] =>  2:09
+CLOCK: [2022-07-22 Fri 19:18]--[2022-07-22 Fri 19:54] =>  0:36
+CLOCK: [2022-07-21 Thu 22:26]--[2022-07-21 Thu 23:58] =>  1:32
+CLOCK: [2022-07-21 Thu 19:18]--[2022-07-21 Thu 19:32] =>  0:14
+CLOCK: [2022-07-20 Wed 23:13]--[2022-07-21 Thu 00:25] =>  1:12
+CLOCK: [2022-07-20 Wed 20:45]--[2022-07-20 Wed 23:08] =>  2:23
+:END:
+- [X] chat messages
+  messages should include time stamps
+- [ ] chat history request
+- [ ] change channel
+
+<2022-07-20 Wed>
+you have all of these message types, including a header, but no way of determining the type of the packet when you deserialize it. you need to include a way to easily get the type of packet, so it can be decoded.
+
+<2022-07-21 Thu 00:20>
+I made some functions which read/write the tcp stream, which are able to determine what type of packet they are. the get_packet function returns a Box< dyn =Packet= >. Now the only thing the caller has to do is (somehow) coerce the =Packet= trait object into an actual object. this shouldn't be too hard. https://stackoverflow.com/questions/33687447/how-to-get-a-reference-to-a-concrete-type-from-a-trait-object
+
+
+- <2022-07-21 Thu 19:30>
+[[file:src/packet.rs::fn get_header(&self) -> HeaderId;][give implementors of packet this function]]
+[[file:src/bin/server.rs::match pkt.get_header(); {][handle what to do on the reception of each packet]]
+
+
+<2022-07-21 Thu 23:57>
+[[file:src/bin/client.rs::let mut inbox = Vec::new();][client.rs area of contention]]
+[[file:src/packet.rs::pub fn recv(stream: &mut TcpStream) -> Packet {][packet.rs fix location]]
+you need to change to output of Packet::recv() from Packet to Vec<Packet>. if there are multiple packets in the buffer, you need to handle that in recv.
+also, I change my strategy, I am just serializing an enum, no complex type system stuff.
+
+** TODO client UI
+** TODO Server Channels
+** TODO server UI

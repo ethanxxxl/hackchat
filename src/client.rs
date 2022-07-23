@@ -1,13 +1,15 @@
-use std::collections::TryReserveError;
-use std::net::{TcpStream, IpAddr, Ipv4Addr, SocketAddr, SocketAddrV4, ToSocketAddrs, Shutdown};
+use std::net::{TcpStream, Shutdown};
 use std::io::{self, Read, Write};
-use std::sync::mpsc;
-use std::thread;
+//use std::sync::mpsc;
+//use std::thread;
+
+use packet::Packet;
+use serde_json;
 
 fn main() -> std::io::Result<()> {
     let stdin = io::stdin();
     let mut stdout = io::stdout();
-    let mut server_addr = String::new();
+    //let mut server_addr = String::new();
     //loop {
     //    server_addr.clear();
     //    print!("enter the server address: ");
@@ -28,21 +30,24 @@ fn main() -> std::io::Result<()> {
 
     //}
 
-    server_addr = "127.0.0.1:4000".to_string();
+    let server_addr = "127.0.0.1:4000".to_string();
 
-    //let mut name = String::new();
-    //print!("enter your name: ");
-    //stdout.flush()?;
-    //stdin.read_line(&mut name)?;
-    //name.pop();
+    let mut name = String::new();
+    print!("enter your name: ");
+    stdout.flush()?;
+    stdin.read_line(&mut name)?;
+    name.pop();
 
     //let (tx, rx) = mpsc::channel();
 
     let mut stream = TcpStream::connect(server_addr).expect("error connecting to server");
     stream.set_nonblocking(true)?;
 
-    let mut message = String::new();
+    Packet::Connect(name).send(&mut stream)?;
+
     loop {
+        let mut message = String::new();
+
         print!(">> ");
         stdout.flush()?;
         stdin.read_line(&mut message)?;
@@ -50,23 +55,18 @@ fn main() -> std::io::Result<()> {
 
         // get new messages from server
         if message.eq("/refresh\n") {
-            let mut inbox = Vec::new();
-            let mut buf = [0 as u8; 32];
-            while let Ok(bytes_read) = stream.read(&mut buf) {
-                inbox.extend_from_slice(&buf[..bytes_read]);
+            while let Ok(pkt) = Packet::recv(&mut stream) {
+                match pkt {
+                    Packet::Message(msg) => println!("{}", msg),
+                    _ => println!("I recieved somthing, but it didn't work."),
+                }
             }
-
-            println!("{}", String::from_utf8(inbox).unwrap());
-
         } else if message.eq("/quit\n") {
             break;
         // send message to server
         } else if message.len() > 0 {
-            stream.write(message.as_bytes())?;
-            stream.flush()?;
+            Packet::Message(message).send(&mut stream)?;
         }
-
-        message.clear();
     }
 
     stream.shutdown(Shutdown::Both)?;
