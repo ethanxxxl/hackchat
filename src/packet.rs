@@ -60,6 +60,7 @@ impl Packet {
         let mut buf = [0 as u8; 8];
         match stream.read(&mut buf) {
             Ok(n) if n == 8 => (),
+            Ok(n) if n == 0 => return Err(std::io::ErrorKind::ConnectionAborted.into()),
             Err(e) => {
                 return Err(e);
             },
