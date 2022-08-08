@@ -1,4 +1,18 @@
 #+title: Notes
+#+BEGIN: clocktable :scope file :maxlevel 2
+#+CAPTION: Clock summary at [2022-07-22 Fri 23:57]
+| Headline                                  |    Time |      |
+|-------------------------------------------+---------+------|
+| *Total time*                              | *10:55* |      |
+|-------------------------------------------+---------+------|
+| Issues                                    |    1:23 |      |
+| \_  client and server each block when...  |         | 0:58 |
+| \_  buffers needs to be dynamically sized |         | 0:25 |
+| Features                                  |    9:32 |      |
+| \_  standardized packet formats           |         | 8:06 |
+| \_  client UI                             |         | 1:26 |
+#+END:
+
 * Issues
 ** DONE client and server each block when they read.
 :LOGBOOK:
@@ -11,17 +25,22 @@ CLOCK: [2022-07-20 Wed 16:00]--[2022-07-20 Wed 16:56] =>  0:56
 :LOGBOOK:
 CLOCK: [2022-07-20 Wed 16:59]--[2022-07-20 Wed 17:24] =>  0:25
 :END:
-** TODO program creashes when a client disconnects
+** TODO server doesn't drop clients when they disconnect
+** TODO Client weird behavior with long messages
+** TODO Commands are handled soley by the client
+** TODO investigate delay in client user interface main code.
 
 * Features
-#+BEGIN: clocktable :scope subtree :maxlevel 2
-#+CAPTION: Clock summary at [2022-07-22 Fri 22:04]
-| Headline                        | Time   |      |
-|---------------------------------+--------+------|
-| *Total time*                    | *8:06* |      |
-|---------------------------------+--------+------|
-| Features                        | 8:06   |      |
-| \_  standardized packet formats |        | 8:06 |
+#+BEGIN: clocktable :scope subtree :maxlevel 3
+#+CAPTION: Clock summary at [2022-07-22 Fri 23:56]
+| Headline                        | Time   |      |      |
+|---------------------------------+--------+------+------|
+| *Total time*                    | *9:32* |      |      |
+|---------------------------------+--------+------+------|
+| Features                        | 9:32   |      |      |
+| \_  standardized packet formats |        | 8:06 |      |
+| \_  client UI                   |        | 1:26 |      |
+| \_    Research                  |        |      | 1:26 |
 #+END:
 
 ** DONE standardized packet formats
@@ -56,6 +75,36 @@ I made some functions which read/write the tcp stream, which are able to determi
 you need to change to output of Packet::recv() from Packet to Vec<Packet>. if there are multiple packets in the buffer, you need to handle that in recv.
 also, I change my strategy, I am just serializing an enum, no complex type system stuff.
 
-** TODO client UI
+** STRT client UI
+*** Research
+:LOGBOOK:
+CLOCK: [2022-07-22 Fri 22:28]--[2022-07-22 Fri 23:54] =>  1:26
+:END:
+<2022-07-22 Fri 23:42> I researched the difference between rust async and OS threading.
+- async threading is useful when you have a large number of processes that need to run concurrently. Rust essentially manages a thread pool for you, presumably with clever tricks to maintain low overhead.
+- OS threads are used when you have simpler programs, or when you have procedures which block the main thread. you can move
+  them into their own thread so that they don't stall the entire program.
+- currently, I am preferring *threads* to async, because I feel that it fits my program better.
+- I have two schools of though concerning how I will implement this program:
+  1. use a thread to manage communication with the server, and reserver TUI updates for the main thread.
+     + This networking thread needs to be able to recieve messages from the main thread (where the UI runs), and also send messages back to the main thread with responses from the server
+     + the main thread needs to manage getting text from the user, and displaying all text to the screen.
+  2. allow the networking thread to draw messages to the screen as they appear.
+     + this allows for simpler user input handling, at the expense of more complicated shared data situations.
+
+*** TUI Design
+:LOGBOOK:
+CLOCK: [2022-08-07 Sun 23:51]
+CLOCK: [2022-08-07 Sun 22:16]--[2022-08-07 Sun 23:25] =>  1:09
+CLOCK: [2022-08-07 Sun 20:17]--[2022-08-07 Sun 21:17] =>  1:00
+CLOCK: [2022-08-07 Sun 16:17]--[2022-08-07 Sun 16:25] =>  0:08
+:END:
+- I got a bare bones UI working. it sends/recieves messages, and displays new messages to the screen in real time.
+- the design is very simple, it coveres the basics though, you can type a message, quit the program (neatly), and even use the backspace button on your keyboard.
+- the only weird thing is that I had to add a ~20ms delay in the main loop. I am not sure why this is, and it will likely need to be fixed at some point.
+
+*** TUI mechanics
+*** networking stuff
+
 ** TODO Server Channels
 ** TODO server UI
