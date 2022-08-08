@@ -1,7 +1,5 @@
 use std::net::TcpStream;
-use std::io::{Read, Write, ErrorKind};
-
-use serde::{Serialize, Deserialize};
+use std::io::{Read, Write};
 
 #[derive(Debug)]
 pub enum Packet {
@@ -76,13 +74,9 @@ impl Packet {
 
         // get rest of packet data;
         let mut buf = vec![0; body_len as usize];
-        // NOTE this may need to be changed back to read_exact
         if let Err(e) = stream.read_exact(buf.as_mut_slice()) {
             return Err(e)
         };
-        //if let Ok(n) = stream.read(buf.as_mut_slice()) {
-        //    println!("i read the remaining {} bytes", n);
-        //};
 
         use Packet::*;
         let packet = match header {
